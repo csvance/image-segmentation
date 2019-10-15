@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 import os
 
 
-def plot_knn(X, y, kf, weights: list, metrics: list, title: str = 'KNN', max_k: int = 10, z_score: bool = True,
+def plot_knn(X, y, kf, weights: list, metrics: list, title: str = 'KNN', max_k: int = 4, z_score: bool = True,
              pca: bool = False, pca_dims: int = 10, savefig: bool = False, show: bool = True):
 
     color_map = {
@@ -16,8 +16,8 @@ def plot_knn(X, y, kf, weights: list, metrics: list, title: str = 'KNN', max_k: 
         'cosine': 'g',
         'chebyshev': 'y',
         'huber': 'm',
-        'l2_log': 'c',
-        'log_10': 'k'
+        'l2_log10': 'c',
+        'log10': 'k'
     }
 
     marker_map = {
@@ -95,7 +95,7 @@ def plot_knn_wrapper(kwargs):
 
 if __name__ == '__main__':
     from multiprocessing import Pool
-    from metrics import huber, log_10, l2_log
+    from metrics import huber, log10, l2_log10
 
     df = pd.read_csv('data/data.csv')
 
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     kf.get_n_splits(X)
 
     weights = ['uniform', 'distance']
-    metrics = ['chebyshev', 'l1', 'l2', huber, log_10, l2_log]
+    metrics = ['chebyshev', 'l1', 'l2', log10, l2_log10]
 
     jobs = []
     pool = Pool(12)
@@ -127,10 +127,12 @@ if __name__ == '__main__':
             'kf': kf,
             'weights': ['uniform', 'distance'],
             'metrics': [metric],
-            'title': 'KNN: %s' % metric if type(metric) == str else metric.__name__,
+            'title': 'KNN: %s' % (metric if type(metric) == str else metric.__name__),
             'savefig': True,
             'show': False
         })
+
+    metrics = ['l1', 'l2', log10, l2_log10]
 
     jobs.append({
         'X': X,

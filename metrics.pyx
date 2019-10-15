@@ -1,4 +1,4 @@
-from libc.math cimport log as log_n
+from libc.math cimport log10 as log_base_10
 
 def huber(double[:] x, double[:] y):
 
@@ -18,7 +18,7 @@ def huber(double[:] x, double[:] y):
 
   return res_sum / n
 
-def l2_log(double[:] x, double[:] y):
+def l2_log10(double[:] x, double[:] y):
 
   cdef int n = x.shape[0]
 
@@ -33,11 +33,11 @@ def l2_log(double[:] x, double[:] y):
     if res <= delta:
       res_sum += (res**2)/2
     else:
-      res_sum += log_n(res*2 + 1)/2 + delta_bias
+      res_sum += log_base_10(res*2 + 1)/2 + delta_bias
 
   return res_sum / n
 
-def log_10(double[:] x, double[:] y):
+def log10(double[:] x, double[:] y):
 
   cdef int n = x.shape[0]
 
@@ -46,6 +46,6 @@ def log_10(double[:] x, double[:] y):
 
   for i in range(n):
     res = abs(x[i] - y[i])
-    res_sum += log_n(res + 1)
+    res_sum += log_base_10(res + 1)
 
   return res_sum / n
