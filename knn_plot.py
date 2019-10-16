@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from sklearn.decomposition import PCA
 import os
 
@@ -36,7 +36,7 @@ def plot_knn(X, y, kf, weights: list, metrics: list, title: str = 'KNN', max_k: 
             px = [x for x in range(1, max_k + 1)]
             py = np.zeros((len(px),))
 
-            for train_index, test_index in kf.split(X):
+            for train_index, test_index in kf.split(X, y):
                 X_train, X_test = X[train_index].copy(), X[test_index].copy()
                 y_train, y_test = y[train_index].copy(), y[test_index].copy()
 
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     X = df[X_cols].values
     y = df['CLASS'].values
 
-    kf = KFold(n_splits=10, random_state=1, shuffle=True)
+    kf = StratifiedKFold(n_splits=10, random_state=1, shuffle=True)
     kf.get_n_splits(X)
 
     weights = ['uniform', 'distance']
