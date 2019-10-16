@@ -84,7 +84,7 @@ def plot_knn(X, y, kf, weights: list, metrics: list, title: str = 'KNN', max_k: 
     plt.legend(legend)
 
     if savefig:
-        plt.savefig(os.path.join('figs', "%s.png" % title.replace(':', '').replace(' ', '')))
+        plt.savefig(os.path.join('figs', "%s.png" % title.replace(':', '').replace(' ', '_')))
     elif show:
         plt.show()
 
