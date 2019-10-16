@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 import os
 
 
-def plot_knn(X, y, kf, weights: list, metrics: list, title: str = 'KNN', max_k: int = 4, z_score: bool = True,
+def plot_knn(X, y, kf, weights: list, metrics: list, title: str = 'KNN', max_k: int = 10, z_score: bool = True,
              pca: bool = False, pca_dims: int = 10, savefig: bool = False, show: bool = True):
 
     color_map = {
@@ -80,11 +80,11 @@ def plot_knn(X, y, kf, weights: list, metrics: list, title: str = 'KNN', max_k: 
     plt.ylabel('%d-Folds Validation Accuracy' % max_k)
     plt.xlabel('k')
     plt.xticks(px)
-    plt.title(title)
+    # plt.title(title)
     plt.legend(legend)
 
     if savefig:
-        plt.savefig(os.path.join('figs', "%s.png" % title.replace(':', '')))
+        plt.savefig(os.path.join('figs', "%s.png" % title.replace(':', '').replace(' ', '')))
     elif show:
         plt.show()
 
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     from multiprocessing import Pool
     from metrics import huber, log10, l2_log10
 
-    df = pd.read_csv('data/data.csv')
+    df = pd.read_csv('data/clean.csv')
 
     X_cols = [c for c in df.keys()][1:]
 
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     X = df[X_cols].values
     y = df['CLASS'].values
 
-    kf = KFold(n_splits=10, random_state=0, shuffle=True)
+    kf = KFold(n_splits=10, random_state=1, shuffle=True)
     kf.get_n_splits(X)
 
     weights = ['uniform', 'distance']
