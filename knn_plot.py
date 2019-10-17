@@ -7,8 +7,8 @@ from sklearn.decomposition import PCA
 import os
 
 
-def plot_knn(X, y, kf, weights: list, metrics: list, title: str = 'KNN', max_k: int = 10, z_score: bool = True,
-             pca: bool = False, pca_dims: int = 10, savefig: bool = False, show: bool = True):
+def plot_knn(X, y, weights: list, metrics: list, title: str = 'KNN', max_k: int = 10, z_score: bool = True,
+             pca: bool = False, pca_dims: int = 10, savefig: bool = False, show: bool = True, n: int = 1):
 
     color_map = {
         'l1': 'b',
@@ -36,34 +36,43 @@ def plot_knn(X, y, kf, weights: list, metrics: list, title: str = 'KNN', max_k: 
             px = [x for x in range(1, max_k + 1)]
             py = np.zeros((len(px),))
 
-            for train_index, test_index in kf.split(X, y):
-                X_train, X_test = X[train_index].copy(), X[test_index].copy()
-                y_train, y_test = y[train_index].copy(), y[test_index].copy()
+            nidx = 0
 
-                if z_score:
-                    u = np.mean(X_train, axis=0)
-                    o = np.std(X_train, axis=0)
+            while nidx < n:
 
-                    X_train -= u
-                    X_train /= o
+                kf = StratifiedKFold(n_splits=10, random_state=nidx, shuffle=True)
+                kf.get_n_splits(X)
 
-                    X_test -= u
-                    X_test /= o
+                for train_index, test_index in kf.split(X, y):
+                    X_train, X_test = X[train_index].copy(), X[test_index].copy()
+                    y_train, y_test = y[train_index].copy(), y[test_index].copy()
 
-                if pca:
-                    pca = PCA(n_components=pca_dims)
-                    pca.fit(X_train)
-                    X_train = pca.transform(X_train)
-                    X_test = pca.transform(X_test)
+                    if z_score:
+                        u = np.mean(X_train, axis=0)
+                        o = np.std(X_train, axis=0)
 
-                for k in range(1, max_k + 1):
-                    neigh = KNeighborsClassifier(n_neighbors=k, metric=metric, weights=weight)
-                    neigh.fit(X_train, y_train)
-                    score = neigh.score(X_test, y_test)
+                        X_train -= u
+                        X_train /= o
 
-                    py[k - 1] += score
+                        X_test -= u
+                        X_test /= o
 
-            py = 100 * py / 10
+                    if pca:
+                        pca = PCA(n_components=pca_dims)
+                        pca.fit(X_train)
+                        X_train = pca.transform(X_train)
+                        X_test = pca.transform(X_test)
+
+                    for k in range(1, max_k + 1):
+                        neigh = KNeighborsClassifier(n_neighbors=k, metric=metric, weights=weight)
+                        neigh.fit(X_train, y_train)
+                        score = neigh.score(X_test, y_test)
+
+                        py[k - 1] += score
+
+                nidx += 1
+
+            py = 100 * py / (10*n)
 
             if type(metric) != str:
                 metric_key = metric.__name__
@@ -95,24 +104,14 @@ def plot_knn_wrapper(kwargs):
 
 if __name__ == '__main__':
     from multiprocessing import Pool
-    from metrics import huber, log10, l2_log10
+    from metrics import log10, l2_log10
 
     df = pd.read_csv('data/clean.csv')
 
     X_cols = [c for c in df.keys()][1:]
 
-    # Remove useless features
-    JUNK_FEATURES = ['REGION-PIXEL-COUNT',  # STD = 0
-                     ]
-
-    for f in JUNK_FEATURES:
-        X_cols.remove(f)
-
     X = df[X_cols].values
     y = df['CLASS'].values
-
-    kf = StratifiedKFold(n_splits=10, random_state=1, shuffle=True)
-    kf.get_n_splits(X)
 
     weights = ['uniform', 'distance']
     metrics = ['chebyshev', 'l1', 'l2', log10, l2_log10]
@@ -124,12 +123,12 @@ if __name__ == '__main__':
         jobs.append({
             'X': X,
             'y': y,
-            'kf': kf,
             'weights': ['uniform', 'distance'],
             'metrics': [metric],
             'title': 'KNN: %s' % (metric if type(metric) == str else metric.__name__),
             'savefig': True,
-            'show': False
+            'show': False,
+            'n': 10
         })
 
     metrics = ['l1', 'l2', log10, l2_log10]
@@ -137,22 +136,22 @@ if __name__ == '__main__':
     jobs.append({
         'X': X,
         'y': y,
-        'kf': kf,
         'weights': ['uniform'],
         'metrics': metrics,
         'title': 'KNN: Uniform',
         'savefig': True,
-        'show': False
+        'show': False,
+        'n': 10
     })
     jobs.append({
         'X': X,
         'y': y,
-        'kf': kf,
         'weights': ['distance'],
         'metrics': metrics,
         'title': 'KNN: Distance',
         'savefig': True,
-        'show': False
+        'show': False,
+        'n': 10
     })
 
     pool.map(plot_knn_wrapper, jobs)
